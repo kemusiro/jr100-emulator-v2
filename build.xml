@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="pack" name="JR100 Emulator version 2">
+  <property name="project" value="jr100v2"/>
+  <property name="version" value="2.4.0"/>
+
+  <property name="src.dir" location="src"/>
+  <property name="lib.dir" location="lib"/>
+  <property name="resource.dir" location="resources"/>
+  <property name="tools.dir" location="tools"/>
+  <property name="build.dir" location="build"/>
+  <property name="zip.dir" location="zip"/>
+  
+  <target name="build" depends="clean">
+    <mkdir dir="${build.dir}"/>
+    <!--
+        javac実行前にJava SE 12のパスを環境変数JAVA_HOMEを設定しておくこと。
+        macOSの場合は以下により設定する。
+        $ export JAVA_HOME=`/usr/libexec/java_home -v 12`
+    -->
+    <javac destdir="${build.dir}"
+	   classpath="${lib.dir}/jinput.jar;${lib.dir}/jh.jar"
+	   includeAntRuntime="false"
+	   source="12"
+	   target="12">
+      <src path="${src.dir}"/>
+    </javac>
+    <copy todir="${build.dir}">
+      <fileset dir="${resource.dir}"/>
+    </copy>
+    <jar destfile="${project}-${version}.jar" basedir="${build.dir}">
+      <manifest>
+        <attribute name="Built-By" value="Kenichi Miyata"/>
+        <attribute name="Main-Class" value="jp.asamomiji.emulator.jr100.JR100Application"/>
+        <attribute name="Class-Path"
+		   value=". .lib/javahelp/jh.jar ./manual.jar ./external/jinput.jar"/>
+      </manifest>
+      <fileset dir="${build.dir}"/>
+    </jar>
+  </target>
+
+  <target name="pack" depends="build">
+    <delete dir="${zip.dir}" />
+    <mkdir dir="${zip.dir}/${project}" />
+    <copy file="${tools.dir}/jr100v2.vbs" todir="${zip.dir}/${project}"/>
+    <copy file="${tools.dir}/jr100v2.sh" todir="${zip.dir}/${project}"/>
+    <copy file="${project}-${version}.jar" tofile="${zip.dir}/${project}/${project}.jar"/>
+    <copy file="${resource.dir}/manual.jar" todir="${zip.dir}/${project}"/>
+    <mkdir dir="${zip.dir}/${project}/external/nativelib"/>
+    <copy file="${lib.dir}/jinput.jar" todir="${zip.dir}/${project}/external"/>
+    <copy file="${lib.dir}/README-jinput.md" todir="${zip.dir}/${project}/external"/>
+    <copy todir="${zip.dir}/${project}/external/nativelib">
+      <fileset dir="${lib.dir}/nativelib"/>
+    </copy>
+    <zip destfile="${project}-${version}.zip" basedir = "${zip.dir}" compress="true" update="no"/>
+  </target>
+
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+    <delete dir="${zip.dir}"/>
+    <delete file="${project}-${version}.jar"/>
+    <delete file="${project}-${version}.zip"/>
+  </target>
+</project>
